@@ -207,34 +207,34 @@ HAL_StatusTypeDef CAN_Transmit_Data(FDCAN_HandleTypeDef *hfdcan, uint16_t ID, ui
     // 但是TX FIFO满时，它会返回错误。因此周期发送时不能永远忽略返回值。
 }
 
-/**
- * @brief CAN的TIM定时器中断发送回调函数
- *
- */
-void TIM_100us_CAN_PeriodElapsedCallback()
-{
-}
+// /**
+//  * @brief CAN的TIM定时器中断发送回调函数
+//  *
+//  */
+// void TIM_100us_CAN_PeriodElapsedCallback()
+// {
+// }
 
-/**
- * @brief CAN的TIM定时器中断发送回调函数
- *
- */
-void TIM_1ms_CAN_PeriodElapsedCallback()
-{
-    // DJI电机专属
+// /**
+//  * @brief CAN的TIM定时器中断发送回调函数
+//  *
+//  */
+// void TIM_1ms_CAN_PeriodElapsedCallback()
+// {
+//     // DJI电机专属
 
-    static int mod2 = 0;
-    mod2++;
-    if (mod2 == 2)
-    {
-        mod2 = 0;
+//     static int mod2 = 0;
+//     mod2++;
+//     if (mod2 == 2)
+//     {
+//         mod2 = 0;
 
-        // 发送实例
-        // CAN_Transmit_Data(&hfdcan2, 0x1fe, CAN2_0x1fe_Tx_Data, 8);
-    }
+//         // 发送实例
+//         // CAN_Transmit_Data(&hfdcan2, 0x1fe, CAN2_0x1fe_Tx_Data, 8);
+//     }
 
-    CAN_Transmit_Data(&hfdcan1, 0x1fe, CAN1_0x1fe_Tx_Data, 8);
-}
+//     CAN_Transmit_Data(&hfdcan1, 0x1fe, CAN1_0x1fe_Tx_Data, 8);
+// }
 
 // FDCAN收到数据
 //       ↓
