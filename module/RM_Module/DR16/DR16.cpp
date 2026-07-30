@@ -1,6 +1,6 @@
 /**
  * @file DR16.cpp
- * @author yssickjgd  + yxn（已学习）
+ * @author yssickjgd  + yxn
  * @brief 遥控器DR16
  * @version 0.1
  *
