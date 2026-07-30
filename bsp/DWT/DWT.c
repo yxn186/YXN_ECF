@@ -8,7 +8,17 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "DWT.h"
+
+//自动选择MCU内核头文件
+#if defined(__CORTEX_M) && (__CORTEX_M == 3U)
+#include "core_cm3.h"
+#elif defined(__CORTEX_M) && (__CORTEX_M == 4U)
 #include "core_cm4.h"
+#elif defined(__CORTEX_M) && (__CORTEX_M == 7U)
+#include "core_cm7.h"
+#else
+#error "Unsupported Cortex-M core for DWT driver"
+#endif
 
 static uint32_t last_cyccnt = 0;
 static uint64_t acc_cycles  = 0;
