@@ -28,7 +28,7 @@ void Class_FDCAN_Adapter::Init(FDCAN_HandleTypeDef *hfdcan)
  * @param length 数据长度，范围0~8
  * @return Enum_CAN_Transmit_Status_e 发送结果
  */
-Enum_CAN_Transmit_Status_e_e Class_FDCAN_Adapter::Transmit(uint16_t id,const uint8_t *data,uint8_t length)
+Enum_CAN_Transmit_Status_e Class_FDCAN_Adapter::Transmit(uint16_t id,const uint8_t *data,uint8_t length)
 {
     //防空
     if (FDCAN_Handle == nullptr || data == nullptr)

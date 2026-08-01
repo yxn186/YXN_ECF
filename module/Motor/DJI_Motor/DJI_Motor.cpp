@@ -102,7 +102,7 @@ uint16_t Class_DJI_Motor_Group::Get_Tx_High_ID(void) const
  * @param data 数据地址
  * @param length 数据长度
  */
-void Class_DJI_Motor_Group::Process_Rx_Data(uint16_t id,const uint8_t *data,uint8_t length)
+void Class_DJI_Motor_Group::Process_CAN_Feedback(uint16_t id,const uint8_t *data,uint8_t length)
 {
     //防空
     if (data == nullptr)

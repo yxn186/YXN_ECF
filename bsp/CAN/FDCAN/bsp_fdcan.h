@@ -42,9 +42,6 @@ struct Struct_CAN_Manage_Object
     uint8_t Rx_Buffer[64];//CAN FD 最大数据长度可以达到 64 字节
     //所以当前库实际上发送的是经典 CAN，最多只有 8 字节。
     //即使数组是64字节，经典CAN有效数据通常仍然只是 8 字节。
-
-    // 接收时间戳
-    uint64_t Rx_Timestamp;
 };
 
 extern bool init_finished;
@@ -81,6 +78,8 @@ extern struct Struct_CAN_Manage_Object CAN3_Manage_Object;
 
 
 void CAN_Init(FDCAN_HandleTypeDef *hfdcan, CAN_Callback Callback_Function);
+
+uint8_t FDCAN_Convert_DLC_To_Length(uint32_t DLC);
 
 HAL_StatusTypeDef CAN_Transmit_Data(FDCAN_HandleTypeDef *hfdcan, uint16_t ID, uint8_t *Data, uint16_t Length);
 

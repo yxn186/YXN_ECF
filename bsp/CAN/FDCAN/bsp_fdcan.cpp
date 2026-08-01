@@ -100,7 +100,7 @@ void CAN_Filter_Mask_Config(FDCAN_HandleTypeDef *hfdcan)
  * @param Length 
  * @return uint32_t 
  */
-static uint32_t CAN_Convert_Length_To_DLC(uint8_t Length)
+static uint32_t FDCAN_Convert_Length_To_DLC(uint8_t Length)
 {
     static const uint32_t DLC_Table[9] =
     {
@@ -121,6 +121,29 @@ static uint32_t CAN_Convert_Length_To_DLC(uint8_t Length)
     }
 
     return DLC_Table[Length];
+}
+
+/**
+ * @brief FDCAN转换DLC宏定义为数据长度
+ *
+ * @param DLC
+ * @return uint8_t
+ */
+uint8_t FDCAN_Convert_DLC_To_Length(uint32_t DLC)
+{
+    switch (DLC)
+    {
+        case FDCAN_DLC_BYTES_0: return 0;
+        case FDCAN_DLC_BYTES_1: return 1;
+        case FDCAN_DLC_BYTES_2: return 2;
+        case FDCAN_DLC_BYTES_3: return 3;
+        case FDCAN_DLC_BYTES_4: return 4;
+        case FDCAN_DLC_BYTES_5: return 5;
+        case FDCAN_DLC_BYTES_6: return 6;
+        case FDCAN_DLC_BYTES_7: return 7;
+        case FDCAN_DLC_BYTES_8: return 8;
+        default: return 0;
+    }
 }
 
 /**
@@ -188,7 +211,7 @@ HAL_StatusTypeDef CAN_Transmit_Data(FDCAN_HandleTypeDef *hfdcan, uint16_t ID, ui
     tx_header.Identifier = ID;  //标准ID 有效范围：0x000 ~ 0x7FF
     tx_header.IdType = FDCAN_STANDARD_ID;//标准帧
     tx_header.TxFrameType = FDCAN_DATA_FRAME;//数据帧
-    tx_header.DataLength = CAN_Convert_Length_To_DLC(Length);//发送字节长度
+    tx_header.DataLength = FDCAN_Convert_Length_To_DLC(Length);//发送字节长度
     tx_header.ErrorStateIndicator = FDCAN_ESI_ACTIVE;//发送节点处于Error Active状态 不用重点关注
     tx_header.BitRateSwitch = FDCAN_BRS_OFF;//不切换数据波特率
     tx_header.FDFormat = FDCAN_CLASSIC_CAN;//使用经典CAN
@@ -293,9 +316,6 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     {
         while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &CAN1_Manage_Object.Rx_Header, CAN1_Manage_Object.Rx_Buffer) == HAL_OK)
         {
-            //记录时间戳
-            CAN1_Manage_Object.Rx_Timestamp = SYS_Timestamp.Get_Current_Timestamp();
-
             if (CAN1_Manage_Object.Callback_Function != nullptr)
             {
                 //调用回调函数处理接收到的数据
@@ -307,8 +327,6 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     {
         while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &CAN2_Manage_Object.Rx_Header, CAN2_Manage_Object.Rx_Buffer) == HAL_OK)
         {
-            CAN2_Manage_Object.Rx_Timestamp = SYS_Timestamp.Get_Current_Timestamp();
-
             if (CAN2_Manage_Object.Callback_Function != nullptr)
             {
                 CAN2_Manage_Object.Callback_Function(CAN2_Manage_Object.Rx_Header, CAN2_Manage_Object.Rx_Buffer);
@@ -319,8 +337,6 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     {
         while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &CAN3_Manage_Object.Rx_Header, CAN3_Manage_Object.Rx_Buffer) == HAL_OK)
         {
-            CAN3_Manage_Object.Rx_Timestamp = SYS_Timestamp.Get_Current_Timestamp();
-
             if (CAN3_Manage_Object.Callback_Function != nullptr)
             {
                 CAN3_Manage_Object.Callback_Function(CAN3_Manage_Object.Rx_Header, CAN3_Manage_Object.Rx_Buffer);
