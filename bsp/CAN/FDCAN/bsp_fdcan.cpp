@@ -279,7 +279,7 @@ HAL_StatusTypeDef CAN_Transmit_Data(FDCAN_HandleTypeDef *hfdcan, uint16_t ID, ui
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
     // 判断程序初始化完成
-    if (!init_finished)
+    if (!Global_Init_Finished)
     {
         //如果未初始化完成
         // 也得接收, 防止FIFO满

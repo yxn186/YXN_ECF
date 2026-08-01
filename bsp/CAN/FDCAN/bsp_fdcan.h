@@ -44,7 +44,7 @@ struct Struct_CAN_Manage_Object
     //即使数组是64字节，经典CAN有效数据通常仍然只是 8 字节。
 };
 
-extern bool init_finished;
+extern bool Global_Init_Finished;
 
 extern struct Struct_CAN_Manage_Object CAN1_Manage_Object;
 extern struct Struct_CAN_Manage_Object CAN2_Manage_Object;
