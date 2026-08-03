@@ -10,7 +10,6 @@
 #include "bmi088.h"
 #include "bmi088reg.h"
 #include "bsp_spi.h"
-#include <cstdint>
 #include <string.h>
 
 static bmi088_handle_t *bmi088_handle_global = NULL;
@@ -37,26 +36,26 @@ void bmi088_init(bmi088_handle_t *handle,SPI_HandleTypeDef *hspi, GPIO_TypeDef *
                                                                   GPIO_TypeDef *int3_gyro_gpiox,uint16_t int3_gyro_pin
 )
 {
-  if (handle == NULL) return;
-  handle->hspi = hspi;
+    if (handle == NULL) return;
+    handle->hspi = hspi;
 
-  handle->csb1_acc_gpiox = csb1_acc_gpiox;
-  handle->csb1_acc_pin = csb1_acc_pin;
-  handle->csb1_acc_gpio_pinstate = csb1_acc_gpio_pinstate;
+    handle->csb1_acc_gpiox = csb1_acc_gpiox;
+    handle->csb1_acc_pin = csb1_acc_pin;
+    handle->csb1_acc_gpio_pinstate = csb1_acc_gpio_pinstate;
 
-  handle->csb2_gyro_gpiox = csb2_gyro_gpiox;
-  handle->csb2_gyro_pin = csb2_gyro_pin;
-  handle->csb2_gyro_gpio_pinstate = csb2_gyro_gpio_pinstate;
+    handle->csb2_gyro_gpiox = csb2_gyro_gpiox;
+    handle->csb2_gyro_pin = csb2_gyro_pin;
+    handle->csb2_gyro_gpio_pinstate = csb2_gyro_gpio_pinstate;
 
-  handle->int1_acc_gpiox = int1_acc_gpiox;
-  handle->int1_acc_pin = int1_acc_pin;
+    handle->int1_acc_gpiox = int1_acc_gpiox;
+    handle->int1_acc_pin = int1_acc_pin;
 
-  handle->int3_gyro_gpiox = int3_gyro_gpiox;
-  handle->int3_gyro_pin = int3_gyro_pin;
+    handle->int3_gyro_gpiox = int3_gyro_gpiox;
+    handle->int3_gyro_pin = int3_gyro_pin;
 
-  bmi088_handle_global = handle;
+    bmi088_handle_global = handle;
 
-  SPI_Init(handle->hspi, bmi088_spi_txrxcallback);
+    SPI_Init(handle->hspi, bmi088_spi_txrxcallback);
 }
 
 /**
@@ -68,7 +67,7 @@ void bmi088_init(bmi088_handle_t *handle,SPI_HandleTypeDef *hspi, GPIO_TypeDef *
  */
 void bmi088_acc_write_reg_blocking(bmi088_handle_t *handle,uint8_t *Tx_Buffer,uint16_t Tx_Length)
 {
-  SPI_Transmit_Data_Blocking(handle->hspi,handle->csb1_acc_gpiox,handle->csb1_acc_pin,handle->csb1_acc_gpio_pinstate,Tx_Buffer,Tx_Length,HAL_MAX_DELAY);
+    SPI_Transmit_Data_Blocking(handle->hspi,handle->csb1_acc_gpiox,handle->csb1_acc_pin,handle->csb1_acc_gpio_pinstate,Tx_Buffer,Tx_Length,HAL_MAX_DELAY);
 }
 
 /**
@@ -80,7 +79,7 @@ void bmi088_acc_write_reg_blocking(bmi088_handle_t *handle,uint8_t *Tx_Buffer,ui
  */
 void bmi088_gyro_write_reg_blocking(bmi088_handle_t *handle,uint8_t *Tx_Buffer,uint16_t Tx_Length)
 {
-  SPI_Transmit_Data_Blocking(handle->hspi,handle->csb2_gyro_gpiox,handle->csb2_gyro_pin,handle->csb2_gyro_gpio_pinstate,Tx_Buffer,Tx_Length,HAL_MAX_DELAY);
+    SPI_Transmit_Data_Blocking(handle->hspi,handle->csb2_gyro_gpiox,handle->csb2_gyro_pin,handle->csb2_gyro_gpio_pinstate,Tx_Buffer,Tx_Length,HAL_MAX_DELAY);
 }
 
 /**
@@ -90,50 +89,50 @@ void bmi088_gyro_write_reg_blocking(bmi088_handle_t *handle,uint8_t *Tx_Buffer,u
  */
 void bmi088_start(bmi088_handle_t *handle)
 {
-  //1-把 ACC 从 suspend 拉到 normal
-  uint8_t Temp1[2] = {BMI088_ACC_PWR_CONF & BMI088_WRITE , BMI088_ACC_PWR_ACTIVE_MODE};
-  bmi088_acc_write_reg_blocking(handle,Temp1, 2);
+    //1-把 ACC 从 suspend 拉到 normal
+    uint8_t Temp1[2] = {BMI088_ACC_PWR_CONF & BMI088_WRITE , BMI088_ACC_PWR_ACTIVE_MODE};
+    bmi088_acc_write_reg_blocking(handle,Temp1, 2);
 
-  HAL_Delay(2);
-  uint8_t Temp2[2] = {BMI088_ACC_PWR_CTRL & BMI088_WRITE , BMI088_ACC_ENABLE_ACC_ON};
-  bmi088_acc_write_reg_blocking(handle,Temp2, 2);
-  HAL_Delay(5);
+    HAL_Delay(2);
+    uint8_t Temp2[2] = {BMI088_ACC_PWR_CTRL & BMI088_WRITE , BMI088_ACC_ENABLE_ACC_ON};
+    bmi088_acc_write_reg_blocking(handle,Temp2, 2);
+    HAL_Delay(5);
 
-  //2-配置 ACC 的“输出频率 + 滤波 + 量程”
-  uint8_t Temp3[2] = {BMI088_ACC_CONF & BMI088_WRITE , BMI088_ACC_NORMAL | BMI088_ACC_1600_HZ | BMI088_ACC_CONF_MUST_Set};
-  bmi088_acc_write_reg_blocking(handle,Temp3, 2);
+    //2-配置 ACC 的“输出频率 + 滤波 + 量程”
+    uint8_t Temp3[2] = {BMI088_ACC_CONF & BMI088_WRITE , BMI088_ACC_NORMAL | BMI088_ACC_1600_HZ | BMI088_ACC_CONF_MUST_Set};
+    bmi088_acc_write_reg_blocking(handle,Temp3, 2);
 
-  uint8_t Temp4[2] = {BMI088_ACC_RANGE & BMI088_WRITE , BMI088_ACC_RANGE_6G};
-  bmi088_acc_write_reg_blocking(handle,Temp4, 2);
+    uint8_t Temp4[2] = {BMI088_ACC_RANGE & BMI088_WRITE , BMI088_ACC_RANGE_6G};
+    bmi088_acc_write_reg_blocking(handle,Temp4, 2);
 
-  //3-配置 GYRO 的“电源模式 + 量程 + 带宽/ODR
-  uint8_t Temp5[2] = {BMI088_GYRO_LPM1 & BMI088_WRITE , BMI088_GYRO_NORMAL_MODE};
-  bmi088_gyro_write_reg_blocking(handle,Temp5, 2);
+    //3-配置 GYRO 的“电源模式 + 量程 + 带宽/ODR
+    uint8_t Temp5[2] = {BMI088_GYRO_LPM1 & BMI088_WRITE , BMI088_GYRO_NORMAL_MODE};
+    bmi088_gyro_write_reg_blocking(handle,Temp5, 2);
 
-  uint8_t Temp6[2] = {BMI088_GYRO_RANGE & BMI088_WRITE , BMI088_GYRO_2000};
-  bmi088_gyro_write_reg_blocking(handle,Temp6, 2);
+    uint8_t Temp6[2] = {BMI088_GYRO_RANGE & BMI088_WRITE , BMI088_GYRO_2000};
+    bmi088_gyro_write_reg_blocking(handle,Temp6, 2);
 
-  uint8_t Temp7[2] = {BMI088_GYRO_BANDWIDTH & BMI088_WRITE , BMI088_GYRO_1000_116_HZ | BMI088_GYRO_BANDWIDTH_MUST_Set};
-  bmi088_gyro_write_reg_blocking(handle,Temp7, 2);
+    uint8_t Temp7[2] = {BMI088_GYRO_BANDWIDTH & BMI088_WRITE , BMI088_GYRO_1000_116_HZ | BMI088_GYRO_BANDWIDTH_MUST_Set};
+    bmi088_gyro_write_reg_blocking(handle,Temp7, 2);
 
-  //待加int1和3 然后是处理数据 最好先完善下笔记流程
+    //待加int1和3 然后是处理数据 最好先完善下笔记流程
 
-  //4-配置INT1 推挽 + 高电平有效 映射 DRDY 到 INT1
-  uint8_t Temp8[2] = {BMI088_INT1_IO_CTRL & BMI088_WRITE , BMI088_ACC_INT1_IO_ENABLE | BMI088_ACC_INT1_GPIO_PP | BMI088_ACC_INT1_GPIO_HIGH};
-  bmi088_acc_write_reg_blocking(handle,Temp8, 2);
+    //4-配置INT1 推挽 + 高电平有效 映射 DRDY 到 INT1
+    uint8_t Temp8[2] = {BMI088_INT1_IO_CTRL & BMI088_WRITE , BMI088_ACC_INT1_IO_ENABLE | BMI088_ACC_INT1_GPIO_PP | BMI088_ACC_INT1_GPIO_HIGH};
+    bmi088_acc_write_reg_blocking(handle,Temp8, 2);
 
-  uint8_t Temp9[2] = {BMI088_INT_MAP_DATA & BMI088_WRITE , BMI088_ACC_INT1_DRDY_INTERRUPT};
-  bmi088_acc_write_reg_blocking(handle,Temp9, 2);
+    uint8_t Temp9[2] = {BMI088_INT_MAP_DATA & BMI088_WRITE , BMI088_ACC_INT1_DRDY_INTERRUPT};
+    bmi088_acc_write_reg_blocking(handle,Temp9, 2);
 
-  //5-配置INT3 使能 gyro 的 DRDY 中断 INT3 推挽 + 高电平有效 映射 DRDY 到 INT3
-  uint8_t Temp10[2] = {BMI088_GYRO_CTRL & BMI088_WRITE , BMI088_DRDY_ON};
-  bmi088_gyro_write_reg_blocking(handle,Temp10, 2);
+    //5-配置INT3 使能 gyro 的 DRDY 中断 INT3 推挽 + 高电平有效 映射 DRDY 到 INT3
+    uint8_t Temp10[2] = {BMI088_GYRO_CTRL & BMI088_WRITE , BMI088_DRDY_ON};
+    bmi088_gyro_write_reg_blocking(handle,Temp10, 2);
 
-  uint8_t Temp11[2] = {BMI088_GYRO_INT3_INT4_IO_CONF & BMI088_WRITE , BMI088_GYRO_INT3_GPIO_PP | BMI088_GYRO_INT3_GPIO_HIGH};
-  bmi088_gyro_write_reg_blocking(handle,Temp11, 2);
+    uint8_t Temp11[2] = {BMI088_GYRO_INT3_INT4_IO_CONF & BMI088_WRITE , BMI088_GYRO_INT3_GPIO_PP | BMI088_GYRO_INT3_GPIO_HIGH};
+    bmi088_gyro_write_reg_blocking(handle,Temp11, 2);
 
-  uint8_t Temp12[2] = {BMI088_GYRO_INT3_INT4_IO_MAP & BMI088_WRITE , BMI088_GYRO_DRDY_IO_INT3};
-  bmi088_gyro_write_reg_blocking(handle,Temp12, 2);
+    uint8_t Temp12[2] = {BMI088_GYRO_INT3_INT4_IO_MAP & BMI088_WRITE , BMI088_GYRO_DRDY_IO_INT3};
+    bmi088_gyro_write_reg_blocking(handle,Temp12, 2);
 }
 
 /**

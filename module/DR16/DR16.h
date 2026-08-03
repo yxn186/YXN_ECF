@@ -538,7 +538,7 @@ inline Enum_DR16_Key_Status Class_DR16::Get_Keyboard_Key_B()
 }
 
 /**
- * @brief 获取遥控器DR16yaw轴状态
+ * @brief 获取遥控器DR16yaw轴状态(左前拨轮数值)
  *
  * @return float 遥控器DR16yaw轴状态
  */
