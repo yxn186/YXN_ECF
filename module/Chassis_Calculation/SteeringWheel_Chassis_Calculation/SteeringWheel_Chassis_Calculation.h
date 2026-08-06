@@ -34,8 +34,8 @@ typedef struct
     //轮电机线速度
     float Wheel_Angular_Speed = 0.0f;
     float Wheel_Linear_Speed = 0.0f;
-    float Rudder_Speed = 0.0f;
-    float Rudder_Angle = 0.0f;
+    float Steering_Speed = 0.0f;
+    float Steering_Angle = 0.0f;
 } SteeringWheel_Motor_Data_t;
 
 /**
@@ -79,7 +79,7 @@ typedef struct
     SteeringWheel_Chassis_Data_t Current;
 } SteeringWheel_Chassis_t;
 
-class SteeringWheel_Chassis_Calculation
+class Class_SteeringWheel_Chassis_Calculation
 {
     public:
 
@@ -114,18 +114,18 @@ class SteeringWheel_Chassis_Calculation
     * @param Motor_Index 电机索引值（0~3）
     * @param Wheel_Angular_Speed 轮电机角速度
     * @param Wheel_Linear_Speed 轮电机线速度
-    * @param Rudder_Speed 舵向电机速度
-    * @param Rudder_Angle 舵向电机角度
+    * @param Steering_Speed 舵向电机速度
+    * @param Steering_Angle 舵向电机角度
     */
-    void Set_Current_Wheel_Motor_Data(uint8_t Motor_Index, float Wheel_Angular_Speed, float Wheel_Linear_Speed, float Rudder_Speed, float Rudder_Angle);
+    void Set_Current_Wheel_Motor_Data(uint8_t Motor_Index, float Wheel_Angular_Speed, float Wheel_Linear_Speed, float Steering_Speed, float Steering_Angle);
 
     /**
     * @brief 设置某个舵轮电机当前舵向角度
     * 
     * @param Motor_Index 电机索引值（0~3）
-    * @param Rudder_Angle 舵向电机角度
+    * @param Steering_Angle 舵向电机角度
     */
-    void Set_Current_Rudder_Motor_Angle(uint8_t Motor_Index, float Rudder_Angle);
+    void Set_Current_Steering_Motor_Angle(uint8_t Motor_Index, float Steering_Angle);
 
     /**
     * @brief 获取某个舵轮电机目标舵向角度
@@ -133,7 +133,7 @@ class SteeringWheel_Chassis_Calculation
     * @param Motor_Index 电机索引值（0~3）
     * @return float 目标舵向角度
     */
-    float Get_Target_Rudder_Angle(uint8_t Motor_Index);
+    float Get_Target_Steering_Angle(uint8_t Motor_Index);
 
     /**
     * @brief 获取某个舵轮电机目标线速度
@@ -180,12 +180,12 @@ class SteeringWheel_Chassis_Calculation
     /**
     * @brief 寻找舵轮最小角度转向函数 计算出原始目标角后调用
     * 
-    * @param Raw_Target_Rudder_Angle 原始舵轮目标角度
-    * @param Current_Rudder_Angle 当前舵轮目标角度
+    * @param Raw_Target_Steering_Angle 原始舵轮目标角度
+    * @param Current_Steering_Angle 当前舵轮目标角度
     * @param Motor_Index 电机索引值
     * @return float 舵轮目标差值
     */
-    float Find_Mini_Target_Rudder_Angle(float Raw_Target_Rudder_Angle,float Current_Rudder_Angle,uint8_t Motor_Index);
+    float Find_Mini_Target_Steering_Angle(float Raw_Target_Steering_Angle,float Current_Steering_Angle,uint8_t Motor_Index);
 
     /**
      * @brief 将角度限制在-180~180度之间

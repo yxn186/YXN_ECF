@@ -24,7 +24,7 @@
  * @param Chassis_b 旋转中心到左右舵轮中心的横向距离
  * @param Wheel_Radius 轮半径
  */
-void SteeringWheel_Chassis_Calculation::Init(float Chassis_a, float Chassis_b, float Wheel_Radius, float Max_Wheel_Motor_Linear_Speed)
+void Class_SteeringWheel_Chassis_Calculation::Init(float Chassis_a, float Chassis_b, float Wheel_Radius, float Max_Wheel_Motor_Linear_Speed)
 {
     if (Wheel_Radius <= 0.0f || Max_Wheel_Motor_Linear_Speed <= 0.0f || Chassis_a <= 0.0f || Chassis_b <= 0.0f)
     {
@@ -43,13 +43,13 @@ void SteeringWheel_Chassis_Calculation::Init(float Chassis_a, float Chassis_b, f
     {
         Motor[i].Target.Wheel_Angular_Speed = 0.0f;
         Motor[i].Target.Wheel_Linear_Speed = 0.0f;
-        Motor[i].Target.Rudder_Speed = 0.0f;
-        Motor[i].Target.Rudder_Angle = 0.0f;
+        Motor[i].Target.Steering_Speed = 0.0f;
+        Motor[i].Target.Steering_Angle = 0.0f;
 
         Motor[i].Current.Wheel_Angular_Speed = 0.0f;
         Motor[i].Current.Wheel_Linear_Speed = 0.0f;
-        Motor[i].Current.Rudder_Speed = 0.0f;
-        Motor[i].Current.Rudder_Angle = 0.0f;
+        Motor[i].Current.Steering_Speed = 0.0f;
+        Motor[i].Current.Steering_Angle = 0.0f;
     }
 
     //初始化舵轮底盘数据
@@ -74,7 +74,7 @@ void SteeringWheel_Chassis_Calculation::Init(float Chassis_a, float Chassis_b, f
  * @param Speed_Y 底盘横向速度分量 左移为正 右移为负
  * @param W_Z 底盘旋转角速度分量 逆时针为正 顺时针为负
  */
-void SteeringWheel_Chassis_Calculation::Set_Target_Chassis_Data(float Speed_X, float Speed_Y, float W_Z)
+void Class_SteeringWheel_Chassis_Calculation::Set_Target_Chassis_Data(float Speed_X, float Speed_Y, float W_Z)
 {
     Chassis.Target.Speed_X = Speed_X;
     Chassis.Target.Speed_Y = Speed_Y;
@@ -90,10 +90,10 @@ void SteeringWheel_Chassis_Calculation::Set_Target_Chassis_Data(float Speed_X, f
  * @param Motor_Index 电机索引值（0~3）
  * @param Wheel_Angular_Speed 轮电机角速度
  * @param Wheel_Linear_Speed 轮电机线速度
- * @param Rudder_Speed 舵向电机速度
- * @param Rudder_Angle 舵向电机角度
+ * @param Steering_Speed 舵向电机速度
+ * @param Steering_Angle 舵向电机角度
  */
-void SteeringWheel_Chassis_Calculation::Set_Current_Wheel_Motor_Data(uint8_t Motor_Index, float Wheel_Angular_Speed, float Wheel_Linear_Speed, float Rudder_Speed, float Rudder_Angle)
+void Class_SteeringWheel_Chassis_Calculation::Set_Current_Wheel_Motor_Data(uint8_t Motor_Index, float Wheel_Angular_Speed, float Wheel_Linear_Speed, float Steering_Speed, float Steering_Angle)
 {
     if (Motor_Index >= 4)
     {
@@ -102,24 +102,24 @@ void SteeringWheel_Chassis_Calculation::Set_Current_Wheel_Motor_Data(uint8_t Mot
 
     Motor[Motor_Index].Current.Wheel_Angular_Speed = Wheel_Angular_Speed;
     Motor[Motor_Index].Current.Wheel_Linear_Speed = Wheel_Linear_Speed;
-    Motor[Motor_Index].Current.Rudder_Speed = Rudder_Speed;
-    Motor[Motor_Index].Current.Rudder_Angle = Rudder_Angle;
+    Motor[Motor_Index].Current.Steering_Speed = Steering_Speed;
+    Motor[Motor_Index].Current.Steering_Angle = Steering_Angle;
 }
 
 /**
  * @brief 设置某个舵轮电机当前舵向角度
  * 
  * @param Motor_Index 电机索引值（0~3）
- * @param Rudder_Angle 舵向电机角度
+ * @param Steering_Angle 舵向电机角度
  */
-void SteeringWheel_Chassis_Calculation::Set_Current_Rudder_Motor_Angle(uint8_t Motor_Index, float Rudder_Angle)
+void Class_SteeringWheel_Chassis_Calculation::Set_Current_Steering_Motor_Angle(uint8_t Motor_Index, float Steering_Angle)
 {
     if (Motor_Index >= 4)
     {
         return;
     }
 
-    Motor[Motor_Index].Current.Rudder_Angle = Rudder_Angle;
+    Motor[Motor_Index].Current.Steering_Angle = Steering_Angle;
 }
 
 /**
@@ -128,14 +128,14 @@ void SteeringWheel_Chassis_Calculation::Set_Current_Rudder_Motor_Angle(uint8_t M
  * @param Motor_Index 电机索引值（0~3）
  * @return float 目标舵向角度
  */
-float SteeringWheel_Chassis_Calculation::Get_Target_Rudder_Angle(uint8_t Motor_Index)
+float Class_SteeringWheel_Chassis_Calculation::Get_Target_Steering_Angle(uint8_t Motor_Index)
 {
     if (Motor_Index >= 4)
     {
         return 0.0f;
     }
 
-    return Motor[Motor_Index].Target.Rudder_Angle;
+    return Motor[Motor_Index].Target.Steering_Angle;
 }
 
 /**
@@ -144,7 +144,7 @@ float SteeringWheel_Chassis_Calculation::Get_Target_Rudder_Angle(uint8_t Motor_I
  * @param Motor_Index 电机索引值（0~3）
  * @return float 目标线速度
  */
-float SteeringWheel_Chassis_Calculation::Get_Target_Wheel_Linear_Speed(uint8_t Motor_Index)
+float Class_SteeringWheel_Chassis_Calculation::Get_Target_Wheel_Linear_Speed(uint8_t Motor_Index)
 {
     if (Motor_Index >= 4)
     {
@@ -160,7 +160,7 @@ float SteeringWheel_Chassis_Calculation::Get_Target_Wheel_Linear_Speed(uint8_t M
  * @param Motor_Index 电机索引值（0~3）
  * @return float 目标角速度
  */
-float SteeringWheel_Chassis_Calculation::Get_Target_Wheel_Angular_Speed(uint8_t Motor_Index)
+float Class_SteeringWheel_Chassis_Calculation::Get_Target_Wheel_Angular_Speed(uint8_t Motor_Index)
 {
     if (Motor_Index >= 4)
     {
@@ -174,7 +174,7 @@ float SteeringWheel_Chassis_Calculation::Get_Target_Wheel_Angular_Speed(uint8_t 
  * @brief 舵轮底盘数据更新
  * 
  */
-void SteeringWheel_Chassis_Calculation::Update(void)
+void Class_SteeringWheel_Chassis_Calculation::Update(void)
 {
     //第一遍：先计算四个轮子的原始线速度和原始舵向角（零速时不覆盖舵角）
     for(uint8_t i = 0; i < 4; i++)
@@ -191,7 +191,7 @@ void SteeringWheel_Chassis_Calculation::Update(void)
         if(Motor[i].Target.Wheel_Linear_Speed > 0.02f)
         {
             //保存原始舵轮目标角度（atan2返回弧度）
-            Motor[i].Target.Rudder_Angle = atan2f(Target_Total_Speed_Y, Target_Total_Speed_X) * RAD_TO_DEG;
+            Motor[i].Target.Steering_Angle = atan2f(Target_Total_Speed_Y, Target_Total_Speed_X) * RAD_TO_DEG;
         }
     }
 
@@ -219,7 +219,7 @@ void SteeringWheel_Chassis_Calculation::Update(void)
         if(Motor[i].Target.Wheel_Linear_Speed > 0.02f)
         {
             //设置舵轮目标最小角度 此时保证当前舵轮角已是最新值
-            float Delta_Target_Angle = Find_Mini_Target_Rudder_Angle(Motor[i].Target.Rudder_Angle, Motor[i].Current.Rudder_Angle, i);
+            float Delta_Target_Angle = Find_Mini_Target_Steering_Angle(Motor[i].Target.Steering_Angle, Motor[i].Current.Steering_Angle, i);
 
             //轮速投影 防止舵轮电机转向未完成导致的轮电机转速过快
             Motor[i].Target.Wheel_Linear_Speed = Motor[i].Target.Wheel_Linear_Speed * cosf(Delta_Target_Angle * DEG_TO_RAD);
@@ -227,7 +227,7 @@ void SteeringWheel_Chassis_Calculation::Update(void)
         else 
         {
             Motor[i].Target.Wheel_Linear_Speed = 0.0f;
-            //Rudder_Angle则保持上一次目标，防止零速时舵角跳变
+            //Steering_Angle则保持上一次目标，防止零速时舵角跳变
         }
 
         //计算轮电机目标角速度
@@ -239,28 +239,28 @@ void SteeringWheel_Chassis_Calculation::Update(void)
 /**
  * @brief 寻找舵轮最小角度转向函数 计算出原始目标角后调用
  * 
- * @param Raw_Target_Rudder_Angle 原始舵轮目标角度
- * @param Current_Rudder_Angle 当前舵轮角度
+ * @param Raw_Target_Steering_Angle 原始舵轮目标角度
+ * @param Current_Steering_Angle 当前舵轮角度
  * @param Motor_Index 电机索引值
  * @return float 舵轮目标差值
  */
-float SteeringWheel_Chassis_Calculation::Find_Mini_Target_Rudder_Angle(float Raw_Target_Rudder_Angle,float Current_Rudder_Angle,uint8_t Motor_Index)
+float Class_SteeringWheel_Chassis_Calculation::Find_Mini_Target_Steering_Angle(float Raw_Target_Steering_Angle,float Current_Steering_Angle,uint8_t Motor_Index)
 {
     //方案1 可以使用原始角度 轮速不用反向
-    float First_Way_Delta_Angle = Wrap(Raw_Target_Rudder_Angle - Current_Rudder_Angle);
+    float First_Way_Delta_Angle = Wrap(Raw_Target_Steering_Angle - Current_Steering_Angle);
 
     //方案2 舵轮目标角度增加180度 轮速反向
-    float Second_Way_Delta_Angle = Wrap(Raw_Target_Rudder_Angle + 180.0f - Current_Rudder_Angle);
+    float Second_Way_Delta_Angle = Wrap(Raw_Target_Steering_Angle + 180.0f - Current_Steering_Angle);
 
     //判断方案优劣
     if(fabsf(First_Way_Delta_Angle) < fabsf(Second_Way_Delta_Angle))//第一种转的角度小
     {
-        this->Motor[Motor_Index].Target.Rudder_Angle = Current_Rudder_Angle + First_Way_Delta_Angle;
+        this->Motor[Motor_Index].Target.Steering_Angle = Current_Steering_Angle + First_Way_Delta_Angle;
         return First_Way_Delta_Angle;
     }
     else//第二种小
     {
-        this->Motor[Motor_Index].Target.Rudder_Angle = Current_Rudder_Angle + Second_Way_Delta_Angle;
+        this->Motor[Motor_Index].Target.Steering_Angle = Current_Steering_Angle + Second_Way_Delta_Angle;
         this->Motor[Motor_Index].Target.Wheel_Linear_Speed = -this->Motor[Motor_Index].Target.Wheel_Linear_Speed;//反向
         return Second_Way_Delta_Angle;
     }
@@ -272,7 +272,7 @@ float SteeringWheel_Chassis_Calculation::Find_Mini_Target_Rudder_Angle(float Raw
  * @param Motor_Index 电机索引
  * @return int8_t 纵向轴距
  */
-float SteeringWheel_Chassis_Calculation::Get_Now_Motor_Group_Vector_a(uint8_t Motor_Index)
+float Class_SteeringWheel_Chassis_Calculation::Get_Now_Motor_Group_Vector_a(uint8_t Motor_Index)
 {
     //前X左Y上Z a是纵向轴距 以y轴对成
     switch(Motor_Index)
@@ -296,7 +296,7 @@ float SteeringWheel_Chassis_Calculation::Get_Now_Motor_Group_Vector_a(uint8_t Mo
  * @param Motor_Index 电机索引
  * @return float 横向轴距
  */
-float SteeringWheel_Chassis_Calculation::Get_Now_Motor_Group_Vector_b(uint8_t Motor_Index)
+float Class_SteeringWheel_Chassis_Calculation::Get_Now_Motor_Group_Vector_b(uint8_t Motor_Index)
 {
     //前X左Y上Z b是横向轴距 以x轴对成
     switch(Motor_Index)
@@ -319,7 +319,7 @@ float SteeringWheel_Chassis_Calculation::Get_Now_Motor_Group_Vector_b(uint8_t Mo
  * 
  * @return uint8_t 最大线速度的电机索引值 
  */
-uint8_t SteeringWheel_Chassis_Calculation::Find_Max_Linear_Speed(void)
+uint8_t Class_SteeringWheel_Chassis_Calculation::Find_Max_Linear_Speed(void)
 {
     float Max_Wheel_Speed = 0.0f;
     uint8_t Max_Speed_Motor_Index = 0;
@@ -342,7 +342,7 @@ uint8_t SteeringWheel_Chassis_Calculation::Find_Max_Linear_Speed(void)
  * @param Angle 角度值
  * @return float 限制后的角度值
  */
-float SteeringWheel_Chassis_Calculation::Wrap(float Angle)
+float Class_SteeringWheel_Chassis_Calculation::Wrap(float Angle)
 {
     while(Angle > 180.0f)
     {

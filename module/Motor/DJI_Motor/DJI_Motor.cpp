@@ -41,7 +41,7 @@ void Class_DJI_Motor_Group::Init(Class_CAN_Interface *CAN_Interface, DJI_Motor_T
  * @brief 大疆电机初始化函数
  * 
  * @param Motor_Type 电机型号 DJI_Motor_6020 / DJI_Motor_3508
- * @param Motor_ID 电机ID
+ * @param Motor_ID 电机ID（3508: 1-8，6020: 1-7）
  * @param group 电机组
  */
 void Class_DJI_Motor::Init(DJI_Motor_Type_Typedef Motor_Type, uint8_t Motor_ID, Class_DJI_Motor_Group *group)

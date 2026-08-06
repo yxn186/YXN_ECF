@@ -99,6 +99,13 @@ private:
 class Class_DJI_Motor
 {
 public:
+    /**
+     * @brief 大疆电机初始化函数
+     *
+     * @param type 电机型号 DJI_Motor_6020 / DJI_Motor_3508
+     * @param id 电机ID（3508: 1-8，6020: 1-7）
+     * @param group 电机组
+     */
     void Init(DJI_Motor_Type_Typedef type, uint8_t id, Class_DJI_Motor_Group *group);
 
     void Set_Out(int16_t out);
