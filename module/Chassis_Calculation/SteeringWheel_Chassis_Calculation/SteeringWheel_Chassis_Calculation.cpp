@@ -89,11 +89,10 @@ void Class_SteeringWheel_Chassis_Calculation::Set_Target_Chassis_Data(float Spee
  * 
  * @param Motor_Index 电机索引值（0~3）
  * @param Wheel_Angular_Speed 轮电机角速度
- * @param Wheel_Linear_Speed 轮电机线速度
  * @param Steering_Speed 舵向电机速度
  * @param Steering_Angle 舵向电机角度
  */
-void Class_SteeringWheel_Chassis_Calculation::Set_Current_Wheel_Motor_Data(uint8_t Motor_Index, float Wheel_Angular_Speed, float Wheel_Linear_Speed, float Steering_Speed, float Steering_Angle)
+void Class_SteeringWheel_Chassis_Calculation::Set_Current_Wheel_Motor_Data(uint8_t Motor_Index, float Wheel_Angular_Speed, float Steering_Speed, float Steering_Angle)
 {
     if (Motor_Index >= 4)
     {
@@ -101,24 +100,8 @@ void Class_SteeringWheel_Chassis_Calculation::Set_Current_Wheel_Motor_Data(uint8
     }
 
     Motor[Motor_Index].Current.Wheel_Angular_Speed = Wheel_Angular_Speed;
-    Motor[Motor_Index].Current.Wheel_Linear_Speed = Wheel_Linear_Speed;
+    Motor[Motor_Index].Current.Wheel_Linear_Speed = Wheel_Angular_Speed * Wheel_Radius;
     Motor[Motor_Index].Current.Steering_Speed = Steering_Speed;
-    Motor[Motor_Index].Current.Steering_Angle = Steering_Angle;
-}
-
-/**
- * @brief 设置某个舵轮电机当前舵向角度
- * 
- * @param Motor_Index 电机索引值（0~3）
- * @param Steering_Angle 舵向电机角度
- */
-void Class_SteeringWheel_Chassis_Calculation::Set_Current_Steering_Motor_Angle(uint8_t Motor_Index, float Steering_Angle)
-{
-    if (Motor_Index >= 4)
-    {
-        return;
-    }
-
     Motor[Motor_Index].Current.Steering_Angle = Steering_Angle;
 }
 

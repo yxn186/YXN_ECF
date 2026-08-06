@@ -113,19 +113,10 @@ class Class_SteeringWheel_Chassis_Calculation
     * 
     * @param Motor_Index 电机索引值（0~3）
     * @param Wheel_Angular_Speed 轮电机角速度
-    * @param Wheel_Linear_Speed 轮电机线速度
     * @param Steering_Speed 舵向电机速度
     * @param Steering_Angle 舵向电机角度
     */
-    void Set_Current_Wheel_Motor_Data(uint8_t Motor_Index, float Wheel_Angular_Speed, float Wheel_Linear_Speed, float Steering_Speed, float Steering_Angle);
-
-    /**
-    * @brief 设置某个舵轮电机当前舵向角度
-    * 
-    * @param Motor_Index 电机索引值（0~3）
-    * @param Steering_Angle 舵向电机角度
-    */
-    void Set_Current_Steering_Motor_Angle(uint8_t Motor_Index, float Steering_Angle);
+    void Set_Current_Wheel_Motor_Data(uint8_t Motor_Index, float Wheel_Angular_Speed, float Steering_Speed, float Steering_Angle);
 
     /**
     * @brief 获取某个舵轮电机目标舵向角度
