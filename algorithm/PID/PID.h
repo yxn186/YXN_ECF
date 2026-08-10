@@ -54,7 +54,7 @@ class Class_PID
     float ErrorInt_High_s = 0.0f;
     float ErrorInt_Low_s = 0.0f;
 
-    // 积分停用条件（目标接近0且误差很小时停积分）
+    // 积分清零条件（目标接近0且误差很小时清零积分）
     uint8_t Integral_Stop_Near_Zero_Enable_s = 0;
     float Integral_Stop_Target_Abs_Threshold_s = 0.0f;
     float Integral_Stop_Error_Abs_Threshold_s = 0.0f;
@@ -77,7 +77,7 @@ class Class_PID
     float Angle_Target_Last = 0.0f;     // 上一次角度目标
     float FeedForward_Out_a = 0.0f;     // 当前前馈输出，方便你观察调试
 
-    // 积分停用条件（目标接近0且误差很小时停积分）
+    // 积分清零条件（目标接近0且误差很小时清零积分）
     uint8_t Integral_Stop_Near_Zero_Enable_a = 0;
     float Integral_Stop_Target_Abs_Threshold_a = 0.0f;
     float Integral_Stop_Error_Abs_Threshold_a = 0.0f;

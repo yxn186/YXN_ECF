@@ -19,6 +19,16 @@ extern "C" {
 #include <stdint.h>
 #include "CAN_Interface.h"
 /*YOUR CODE*/
+
+/**
+ * @brief 大疆电机反馈超时时间，单位ms
+ *
+ * 可通过编译选项覆盖该宏，以适配不同的反馈周期。
+ */
+#ifndef DJI_MOTOR_FEEDBACK_TIMEOUT_MS
+#define DJI_MOTOR_FEEDBACK_TIMEOUT_MS 100U
+#endif
+
 class Class_DJI_Motor;
 
 /**
@@ -108,6 +118,21 @@ public:
      */
     void Init(DJI_Motor_Type_Typedef type, uint8_t id, Class_DJI_Motor_Group *group);
 
+    /**
+     * @brief 更新大疆电机在线状态
+     *
+     * 根据是否收到过合法反馈以及距离最近反馈的时间判断电机是否在线。
+     */
+    void Update_Online_State(void);
+
+    /**
+     * @brief 获取大疆电机当前在线状态
+     *
+     * @return true 已收到合法反馈，且反馈未超时
+     * @return false 尚未收到合法反馈，或反馈已经超时
+     */
+    bool Get_Online_State(void) const;
+
     void Set_Out(int16_t out);
 
     int16_t Get_Out() const
@@ -165,6 +190,10 @@ private:
     int16_t Speed_Rpm = 0;
     int16_t Torque_Current = 0;
     uint8_t Temperature = 0;
+
+    bool Online = false;                 // 当前反馈是否在线
+    uint32_t Last_Feedback_Time = 0;     // 最近一次合法反馈时间，单位ms
+    bool Feedback_Initialized = false;   // 是否至少收到过一次合法反馈
 
     int16_t Out = 0;
 

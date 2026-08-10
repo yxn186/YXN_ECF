@@ -8,6 +8,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "DJI_Motor.h"
+#include "main.h"
 #include <cstring>
 
 #define motor_gear_ratio_inv 0.063432835820f //减速比倒数 268：17
@@ -58,6 +59,9 @@ void Class_DJI_Motor::Init(DJI_Motor_Type_Typedef Motor_Type, uint8_t Motor_ID, 
     Angle = 0;
     Last_Angle = 0;
     Continuous_Angle = 0;
+    Online = false;
+    Last_Feedback_Time = 0;
+    Feedback_Initialized = false;
 
     if (Group != nullptr)
     {
@@ -172,25 +176,74 @@ void Class_DJI_Motor::FeedBack_Data(const uint8_t *data)
 
     Angle = RawAngle * 0.0439453125f;// 360.0f / 8192.0f
 
-    float delta_angle = Angle - Last_Angle;
-
-    if (delta_angle > 180.0f)
+    //首帧直接建立角度基准 防止将上电默认值0误认为真实反馈角度
+    if (!Feedback_Initialized)
     {
-        delta_angle -= 360.0f;
+        Last_Angle = Angle;
+        Continuous_Angle = Angle;
+        Feedback_Initialized = true;
     }
-    else if (delta_angle < -180.0f)
+    else
     {
-        delta_angle += 360.0f;
-    }
+        float delta_angle = Angle - Last_Angle;
 
-    Continuous_Angle += delta_angle;
-    Last_Angle = Angle;
+        if (delta_angle > 180.0f)
+        {
+            delta_angle -= 360.0f;
+        }
+        else if (delta_angle < -180.0f)
+        {
+            delta_angle += 360.0f;
+        }
+
+        Continuous_Angle += delta_angle;
+        Last_Angle = Angle;
+    }
 
     Speed_Rpm = static_cast<int16_t>((static_cast<uint16_t>(data[2]) << 8) |data[3]);
 
     Torque_Current =static_cast<int16_t>((static_cast<uint16_t>(data[4]) << 8) |data[5]);
 
     Temperature = data[6];
+
+    //刷新在线状态
+    Last_Feedback_Time = HAL_GetTick();
+    Online = true;
+}
+
+/**
+ * @brief 更新大疆电机在线状态
+ */
+void Class_DJI_Motor::Update_Online_State(void)
+{
+    //首帧反馈到达前始终保持离线 避免使用默认反馈值参与控制
+    if (!Feedback_Initialized)
+    {
+        Online = false;
+        return;
+    }
+
+    //掉线后必须由新的合法反馈重新置为在线
+    if (!Online) return;
+
+    uint32_t Current_Time = HAL_GetTick();
+    uint32_t Time_Since_Last_Feedback = Current_Time - Last_Feedback_Time;
+
+    if (Time_Since_Last_Feedback > DJI_MOTOR_FEEDBACK_TIMEOUT_MS)
+    {
+        Online = false;
+    }
+}
+
+/**
+ * @brief 获取大疆电机当前在线状态
+ *
+ * @return true 已收到合法反馈，且反馈未超时
+ * @return false 尚未收到合法反馈，或反馈已经超时
+ */
+bool Class_DJI_Motor::Get_Online_State(void) const
+{
+    return Online;
 }
 
 /**
