@@ -142,4 +142,28 @@ void Class_PID::Reset(void)
     Angle_FF_Out = 0.0f;
 }
 
+/**
+* @brief 限幅函数
+* 
+* @param value 传入值
+* @param low 最低
+* @param high 最高
+* @return float 限幅后值
+*/
+float Class_PID::Limit(float value, float low, float high)
+{
+	if (value > high)
+	{
+		return high;
+	}
+	else if (value < low)
+	{
+		return low;
+	}
+	else
+	{
+		return value;
+	}
+}
+
 //--------------------------------------------------------------------
