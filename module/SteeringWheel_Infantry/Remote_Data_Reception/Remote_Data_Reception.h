@@ -41,6 +41,13 @@ public:
     void Init(Class_DR16 *DR16,Class_SteeringWheel_Infantry_BoardCAN *BoardCAN,SteeringWheel_Infantry_BoardCAN_Role_e Board_Roll);
 
     /**
+     * @brief 判断DR16是否安装在当前主控
+     *
+     * @return bool true表示当前主控直接连接DR16
+     */
+    bool Is_DR16_Local_Board();
+
+    /**
      * @brief 更新遥控数据并按需发送板间CAN数据
      *
      * @param Now_ms 当前系统时间，单位ms

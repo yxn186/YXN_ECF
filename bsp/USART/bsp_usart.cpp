@@ -19,6 +19,8 @@ static uint8_t UART2_Tx_Buf[UART2_TX_BUFFER_SIZE];
 static uint8_t UART2_Rx_Buf[UART2_RX_BUFFER_SIZE];
 static uint8_t UART3_Tx_Buf[UART3_TX_BUFFER_SIZE];
 static uint8_t UART3_Rx_Buf[UART3_RX_BUFFER_SIZE];
+static uint8_t UART5_Tx_Buf[UART5_TX_BUFFER_SIZE];
+static uint8_t UART5_Rx_Buf[UART5_RX_BUFFER_SIZE];
 static uint8_t UART6_Tx_Buf[UART6_TX_BUFFER_SIZE];
 static uint8_t UART6_Rx_Buf[UART6_RX_BUFFER_SIZE];
 
@@ -27,7 +29,7 @@ Struct_UART_Manage_Object UART1_Manage_Object = { nullptr, UART1_Tx_Buf, UART1_R
 Struct_UART_Manage_Object UART2_Manage_Object = { nullptr, UART2_Tx_Buf, UART2_Rx_Buf, 0, nullptr, nullptr, nullptr };
 Struct_UART_Manage_Object UART3_Manage_Object = { nullptr, UART3_Tx_Buf, UART3_Rx_Buf, 0, nullptr, nullptr, nullptr };
 Struct_UART_Manage_Object UART4_Manage_Object = { nullptr, nullptr, nullptr, 0, nullptr, nullptr, nullptr };
-Struct_UART_Manage_Object UART5_Manage_Object = { nullptr, nullptr, nullptr, 0, nullptr, nullptr, nullptr };
+Struct_UART_Manage_Object UART5_Manage_Object = { nullptr, UART5_Tx_Buf, UART5_Rx_Buf, 0, nullptr, nullptr, nullptr };
 Struct_UART_Manage_Object UART6_Manage_Object = { nullptr, UART6_Tx_Buf, UART6_Rx_Buf, 0, nullptr, nullptr, nullptr };
 
 
@@ -53,6 +55,10 @@ static uint16_t UART_Clamp_Rx_Length(USART_TypeDef *instance, uint16_t requested
     else if (instance == USART3)
     {
         capacity = UART3_RX_BUFFER_SIZE;
+    }
+    else if (instance == UART5)
+    {
+        capacity = UART5_RX_BUFFER_SIZE;
     }
     else if (instance == USART6)
     {
@@ -117,6 +123,15 @@ void UART_Init(UART_HandleTypeDef *huart, UART_Tx_Call_Back Tx_Callback_Function
         UART3_Manage_Object.Rx_Callback_Context = Rx_Callback_Context;
         UART_Start_Receive_To_Idle_DMA(huart, UART3_Manage_Object.Rx_Buffer, UART3_Manage_Object.Rx_Buffer_Length);
     }
+    else if (huart->Instance == UART5)
+    {
+        UART5_Manage_Object.UART_Handler = huart;
+        UART5_Manage_Object.Tx_Callback_Function = Tx_Callback_Function;
+        UART5_Manage_Object.Rx_Callback_Function = Rx_Callback_Function;
+        UART5_Manage_Object.Rx_Buffer_Length = Rx_Buffer_Length;
+        UART5_Manage_Object.Rx_Callback_Context = Rx_Callback_Context;
+        UART_Start_Receive_To_Idle_DMA(huart, UART5_Manage_Object.Rx_Buffer, UART5_Manage_Object.Rx_Buffer_Length);
+    }
     else if (huart->Instance == USART6)
     {
         UART6_Manage_Object.UART_Handler = huart;
@@ -147,6 +162,10 @@ void UART_Reinit(UART_HandleTypeDef *huart)
     else if (huart->Instance == USART3)
     {
         UART_Start_Receive_To_Idle_DMA(huart, UART3_Manage_Object.Rx_Buffer, UART3_Manage_Object.Rx_Buffer_Length);
+    }
+    else if (huart->Instance == UART5)
+    {
+        UART_Start_Receive_To_Idle_DMA(huart, UART5_Manage_Object.Rx_Buffer, UART5_Manage_Object.Rx_Buffer_Length);
     }
     else if (huart->Instance == USART6)
     {
@@ -205,6 +224,13 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
             UART3_Manage_Object.Tx_Callback_Function(UART3_Manage_Object.UART_Handler);
         }
     }
+    else if (huart->Instance == UART5)
+    {
+        if(UART5_Manage_Object.Tx_Callback_Function != nullptr)
+        {
+            UART5_Manage_Object.Tx_Callback_Function(UART5_Manage_Object.UART_Handler);
+        }
+    }
     else if (huart->Instance == USART6)
     {
         if(UART6_Manage_Object.Tx_Callback_Function != nullptr)
@@ -237,6 +263,10 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         else if (huart->Instance == USART3)
         {
             UART_Start_Receive_To_Idle_DMA(huart, UART3_Manage_Object.Rx_Buffer, UART3_Manage_Object.Rx_Buffer_Length);
+        }
+        else if (huart->Instance == UART5)
+        {
+            UART_Start_Receive_To_Idle_DMA(huart, UART5_Manage_Object.Rx_Buffer, UART5_Manage_Object.Rx_Buffer_Length);
         }
         else if (huart->Instance == USART6)
         {
@@ -271,6 +301,14 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         }
         UART_Start_Receive_To_Idle_DMA(huart, UART3_Manage_Object.Rx_Buffer, UART3_Manage_Object.Rx_Buffer_Length);
     }
+    else if (huart->Instance == UART5)
+    {
+        if(UART5_Manage_Object.Rx_Callback_Function != nullptr)
+        {
+            UART5_Manage_Object.Rx_Callback_Function(UART5_Manage_Object.Rx_Callback_Context, UART5_Manage_Object.Rx_Buffer, Size);
+        }
+        UART_Start_Receive_To_Idle_DMA(huart, UART5_Manage_Object.Rx_Buffer, UART5_Manage_Object.Rx_Buffer_Length);
+    }
     else if (huart->Instance == USART6)
     {
         if(UART6_Manage_Object.Rx_Callback_Function != nullptr)
@@ -299,6 +337,10 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
     else if (huart->Instance == USART3)
     {
         UART_Start_Receive_To_Idle_DMA(huart, UART3_Manage_Object.Rx_Buffer, UART3_Manage_Object.Rx_Buffer_Length);
+    }
+    else if (huart->Instance == UART5)
+    {
+        UART_Start_Receive_To_Idle_DMA(huart, UART5_Manage_Object.Rx_Buffer, UART5_Manage_Object.Rx_Buffer_Length);
     }
     else if (huart->Instance == USART6)
     {

@@ -15,7 +15,9 @@
 #define SteeringWheel_Infantry_Board_Chassis 1
 
 //define DR16安装位置
+#ifndef SteeringWheel_Infantry_DR16_Location
 #define SteeringWheel_Infantry_DR16_Location    SteeringWheel_Infantry_Board_Gimbal
+#endif
 
 //板间CAN的摇杆定点数缩放倍率、发送周期和接收超时时间
 #define SteeringWheel_Infantry_Remote_CAN_Scale             1000.0f
@@ -103,6 +105,16 @@ void Class_SteeringWheel_Infantry_Remote_Data_Reception::Init(Class_DR16 *DR16,C
     Reset_Remote_Data();
 }
 
+/**
+ * @brief 判断DR16是否安装在当前主控
+ *
+ * @return bool true表示当前主控直接连接DR16
+ */
+bool Class_SteeringWheel_Infantry_Remote_Data_Reception::Is_DR16_Local_Board()
+{
+    return static_cast<uint8_t>(BoardCAN_This_Board_Roll) == SteeringWheel_Infantry_DR16_Location;
+}
+
 //更新
 
 /**
@@ -112,7 +124,7 @@ void Class_SteeringWheel_Infantry_Remote_Data_Reception::Init(Class_DR16 *DR16,C
  */
 void Class_SteeringWheel_Infantry_Remote_Data_Reception::Update(uint32_t Now_ms)
 {
-    if (static_cast<uint8_t>(BoardCAN_This_Board_Roll) == SteeringWheel_Infantry_DR16_Location)
+    if (Is_DR16_Local_Board())
     {
         //DR16安装在本板 使用本地DR16数据源
         Update_From_DR16(Now_ms);
