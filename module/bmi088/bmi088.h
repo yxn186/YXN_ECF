@@ -2,285 +2,404 @@
 /**
   ******************************************************************************
   * @file    bmi088.h
-  * @brief   This file contains all the function prototypes for
-  *          the bmi088.cpp file
+  * @brief   BMI088传感器驱动
+  * @author  yxn
   ******************************************************************************
   */
 /* USER CODE END Header */
-/* Define to prevent recursive inclusion -------------------------------------*/
+
 #ifndef __BMI088_H__
 #define __BMI088_H__
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "bsp_spi.h"
 #include "bmi088reg.h"
+#include "bsp_spi.h"
 /*YOUR CODE*/
 
-/* 回调函数 */
-typedef void (*bmi088_readid_acc_finishedfunction)(uint8_t acc_id);
-typedef void (*bmi088_readid_gyro_finishedfunction)(uint8_t gyro_id);
-
-typedef void (*bmi088_acc_read_reg_finishedfunction)(uint8_t read_reg_address, uint8_t *rx_data, uint16_t rx_length);
-typedef void (*bmi088_gyro_read_reg_finishedfunction)(uint8_t read_reg_address, uint8_t *rx_data, uint16_t rx_length);
-
-typedef void (*bmi088_acc_write_reg_finishedfunction)(uint8_t write_reg_address,uint8_t *tx_data,uint16_t tx_length);
-typedef void (*bmi088_gyro_write_reg_finishedfunction)(uint8_t write_reg_address,uint8_t *tx_data,uint16_t tx_length);
-
 /**
- * @brief GYRO 原始角速度回调函数（返回三轴 int16 原始值）
- * 
- * @param gyro_raw_x 原始X轴角速度
- * @param gyro_raw_y 原始Y轴角速度
- * @param gyro_raw_z 原始Z轴角速度
+ * @brief BMI088驱动运行状态
  */
-typedef void (*bmi088_gyro_get_raw_data_finishedfunction)(int16_t gyro_raw_x,int16_t gyro_raw_y,int16_t gyro_raw_z);
-
-/**
- * @brief ACC 原始加速度回调函数（返回三轴 int16 原始值）
- * 
- * @param acc_raw_x 原始X轴加速度
- * @param acc_raw_y 原始Y轴加速度
- * @param acc_raw_z 原始Z轴加速度
- */
-typedef void (*bmi088_acc_get_raw_data_finishedfunction)(int16_t acc_raw_x,int16_t acc_raw_y,int16_t acc_raw_z);
-
-
-/**
- * @brief BMI088运行状态
- * 
- */
-typedef enum
+enum class BMI088_States_e : uint8_t
 {
-    bmi088_no_operation = 0,
-
-    bmi088_reading_acc_reg,
-    bmi088_reading_gyro_reg,
-
-    bmi088_writing_acc_reg,
-    bmi088_writing_gyro_reg,
-
-} bmi088_current_operation;
+    Uninitialized = 0,
+    Initializing,
+    Ready,
+    Offline,
+    Error
+};
 
 /**
- * @brief bmi088句柄
- * 
+ * @brief BMI088初始化参数
  */
 typedef struct
 {
-    SPI_HandleTypeDef *hspi;                    //hspix
+    SPI_HandleTypeDef *SPI_Handler = nullptr;                    //BMI088使用的SPI句柄
 
-    GPIO_TypeDef *csb1_acc_gpiox;                   //CSB1-GPIOx
-    uint16_t csb1_acc_pin;                          //CSB1-Pin
-    GPIO_PinState csb1_acc_gpio_pinstate;           //CSB1-引脚状态
+    GPIO_TypeDef *ACC_CS_GPIOx = nullptr;                        //加速度计片选端口
+    uint16_t ACC_CS_Pin = 0;                                    //加速度计片选引脚
+    GPIO_PinState ACC_CS_Active_Level = GPIO_PIN_RESET;          //加速度计片选有效电平
 
-    GPIO_TypeDef *csb2_gyro_gpiox;                   //CSB2-GPIOx
-    uint16_t csb2_gyro_pin;                          //CSB2-Pin
-    GPIO_PinState csb2_gyro_gpio_pinstate;           //CSB2-引脚状态
+    GPIO_TypeDef *GYRO_CS_GPIOx = nullptr;                       //陀螺仪片选端口
+    uint16_t GYRO_CS_Pin = 0;                                   //陀螺仪片选引脚
+    GPIO_PinState GYRO_CS_Active_Level = GPIO_PIN_RESET;         //陀螺仪片选有效电平
 
-    GPIO_TypeDef *int1_acc_gpiox;                   //INT1-GPIOx
-    uint16_t int1_acc_pin;                          //INT1-Pin
+    uint16_t ACC_INT_Pin = 0;                                   //加速度数据就绪中断引脚
+    uint16_t GYRO_INT_Pin = 0;                                  //陀螺仪数据就绪中断引脚
 
-    GPIO_TypeDef *int3_gyro_gpiox;                   //INT3-GPIOx
-    uint16_t int3_gyro_pin;                          //INT3-Pin
+    uint8_t ACC_Config_Value = BMI088_ACC_NORMAL | BMI088_ACC_800_HZ | BMI088_ACC_CONF_MUST_Set; //加速度计采样配置寄存器值
+    uint8_t ACC_Range_Value = BMI088_ACC_RANGE_6G;               //加速度计量程寄存器值
+    float ACC_Range_G = 6.0f;                                   //加速度计换算量程，单位g
 
-    bmi088_current_operation current_operation;
+    uint8_t GYRO_Bandwidth_Value = BMI088_GYRO_1000_116_HZ | BMI088_GYRO_BANDWIDTH_MUST_Set; //陀螺仪带宽和采样率寄存器值
+    uint8_t GYRO_Range_Value = BMI088_GYRO_2000;                 //陀螺仪量程寄存器值
+    float GYRO_Range_DPS = 2000.0f;                             //陀螺仪换算量程，单位degree/s
 
-    uint8_t tx_buffer[260];
-    uint8_t rx_buffer[260];
-
-    uint8_t acc_id;
-    uint8_t gyro_id;
-
-    uint8_t  *acc_read_reg_rx_buffer;
-    uint16_t  acc_read_reg_rx_length;
-    uint8_t   acc_read_reg_address;
-
-    uint8_t  *gyro_read_reg_rx_buffer;
-    uint16_t  gyro_read_reg_rx_length;
-    uint8_t   gyro_read_reg_address;
-
-    uint8_t   acc_write_reg_address;
-    uint16_t  acc_write_reg_tx_length;
-    bmi088_acc_write_reg_finishedfunction acc_write_reg_finishedfunction;
-
-    uint8_t   gyro_write_reg_address;
-    uint16_t  gyro_write_reg_tx_length;
-    bmi088_gyro_write_reg_finishedfunction gyro_write_reg_finishedfunction;
-
-    bmi088_acc_read_reg_finishedfunction acc_read_reg_finishedfunction;
-    bmi088_gyro_read_reg_finishedfunction gyro_read_reg_finishedfunction;
-
-    bmi088_readid_acc_finishedfunction readid_acc_finishedfunction;
-    bmi088_readid_gyro_finishedfunction readid_gyro_finishedfunction;
-
-    //GET DATA  
-    bmi088_gyro_get_raw_data_finishedfunction gyro_get_raw_data_finishedfunction;
-    uint8_t gyro_raw_data_rx_buffer[6];
-
-    bmi088_acc_get_raw_data_finishedfunction acc_get_raw_data_finishedfunction;
-    uint8_t acc_raw_data_rx_buffer[6];
-
-}bmi088_handle_t;
+    uint32_t Feedback_Timeout_ms = 100;                          //完整数据反馈超时时间，单位ms
+} BMI088_Config_t;
 
 /**
- * @brief BMI088初始化
- * 
- * @param handle BMI088句柄指针
- * @param hspi hspix
- * @param csb1_acc_gpiox acc片选-CSB1-GPIOx
- * @param csb1_acc_pin acc片选-CSB1-GPIO-pinx
- * @param csb1_acc_gpio_pinstate acc片选-CSB1-GPIO状态
- * @param csb2_gyro_gpiox gyro片选-CSB2-GPIOx
- * @param csb2_gyro_pin gyro片选-CSB2-GPIO-pinx
- * @param csb2_gyro_gpio_pinstate gyro片选-CSB2-GPIO状态
- * @param int1_acc_gpiox acc中断-INT1-GPIOx
- * @param int1_acc_pin acc中断-INT1-GPIO-pinx
- * @param int3_gyro_gpiox gyro中断-INT3-GPIOx
- * @param int3_gyro_pin gyro中断-INT3-GPIO-pinx
- */
-void bmi088_init(bmi088_handle_t *handle,SPI_HandleTypeDef *hspi, GPIO_TypeDef *csb1_acc_gpiox,uint16_t csb1_acc_pin,GPIO_PinState csb1_acc_gpio_pinstate,
-                                                                  GPIO_TypeDef *csb2_gyro_gpiox,uint16_t csb2_gyro_pin,GPIO_PinState csb2_gyro_gpio_pinstate,
-                                                                  GPIO_TypeDef *int1_acc_gpiox,uint16_t int1_acc_pin,
-                                                                  GPIO_TypeDef *int3_gyro_gpiox,uint16_t int3_gyro_pin
-);
-
-/**
- * @brief BMI088开始配置参数函数
- * 
- * @param handle BMI088句柄指针
- */
-void bmi088_start(bmi088_handle_t *handle);
-
-/**
- * @brief bmi088_get_acc_raw_data 获取acc原始加速度（X/Y/Z，共6字节）
- * 
- * @param handle BMI088句柄指针
- * @param acc_get_raw_data_finishedfunction 读取完成回调（三轴int16原始值）
- * @return uint8_t 执行是否成功
- */
-uint8_t bmi088_get_acc_raw_data(bmi088_handle_t *handle,bmi088_acc_get_raw_data_finishedfunction acc_get_raw_data_finishedfunction);
-
-/**
- * @brief bmi088_get_gyro_raw_data 获取gyro原始角速度（X/Y/Z，共6字节）
- * 
- * @param handle BMI088句柄指针
- * @param gyro_get_raw_data_finishedfunction 读取完成回调（三轴int16原始值）
- * @return uint8_t 执行是否成功
- */
-uint8_t bmi088_get_gyro_raw_data(bmi088_handle_t *handle,bmi088_gyro_get_raw_data_finishedfunction gyro_get_raw_data_finishedfunction);
-
-/**
- * @brief BMI088 acc 写寄存器阻塞版
- * 
- * @param handle BMI088句柄指针
- * @param Tx_Buffer 发送缓冲区
- * @param Tx_Length 发送长度
- */
-void bmi088_acc_write_reg_blocking(bmi088_handle_t *handle,uint8_t *Tx_Buffer,uint16_t Tx_Length);
-
-/**
- * @brief BMI088 gyro 写寄存器阻塞版
- * 
- * @param handle BMI088句柄指针
- * @param Tx_Buffer 发送缓冲区
- * @param Tx_Length  发送长度
- */
-void bmi088_gyro_write_reg_blocking(bmi088_handle_t *handle,uint8_t *Tx_Buffer,uint16_t Tx_Length);
-
-/**
- * @brief 读ACC寄存器ID 期望返回值0x1E
- * 
- * @param handle BMI088句柄指针
- * @param readid_acc_finishedfunction 读acc的id的回调函数
- */
-void bmi088_readid_acc(bmi088_handle_t *handle,bmi088_readid_acc_finishedfunction readid_acc_finishedfunction);
-
-/**
- * @brief 读取GYRO寄存器ID 期望返回值 0x0F
- * 
- * @param handle BMI088句柄指针
- * @param readid_gyro_finishedfunction 读取gyro的id的回调函数
- */
-void bmi088_readid_gyro(bmi088_handle_t *handle,bmi088_readid_gyro_finishedfunction readid_gyro_finishedfunction);
-
-/**
- * @brief 读acc寄存器
- * 
- * @param handle BMI088句柄指针
- * @param read_reg_address 读acc寄存器的地址
- * @param rx_data 接收数据地址
- * @param rx_length 接收数据长度
- * @param acc_read_reg_finishedfunction 接收数据回调函数
- */
-void bmi088_acc_read_reg(bmi088_handle_t *handle,uint8_t read_reg_address,uint8_t *rx_data,uint16_t rx_length,bmi088_acc_read_reg_finishedfunction acc_read_reg_finishedfunction);
-
-/**
- * @brief 读gyro寄存器
- * 
- * @param handle BMI088句柄指针
- * @param read_reg_address 读gyro寄存器的地址
- * @param rx_data 接收数据地址
- * @param rx_length 接收数据长度
- * @param gyro_read_reg_finishedfunction 接收数据回调函数
- */
-void bmi088_gyro_read_reg(bmi088_handle_t *handle,uint8_t read_reg_address,uint8_t *rx_data,uint16_t rx_length,bmi088_gyro_read_reg_finishedfunction gyro_read_reg_finishedfunction);
-
-/**
- * @brief 写acc寄存器
+ * @brief BMI088传感器类
  *
- * @param handle BMI088句柄指针
- * @param write_reg_address 写acc寄存器的地址
- * @param tx_data 要写入的数据地址
- * @param tx_length 写入数据长度
- * @param acc_write_reg_finishedfunction 写完成回调函数（可为NULL）
+ * 本类只负责传感器初始化、SPI采样和单位换算，不负责姿态解算。
  */
-void bmi088_acc_write_reg(bmi088_handle_t *handle,uint8_t write_reg_address,uint8_t *tx_data,uint16_t tx_length,bmi088_acc_write_reg_finishedfunction acc_write_reg_finishedfunction);
+class Class_BMI088
+{
+public:
+    /**
+     * @brief 初始化BMI088驱动
+     *
+     * @param Config SPI、GPIO、量程和超时等初始化参数
+     * @return bool true表示参数有效并开始初始化
+     */
+    bool Init(const BMI088_Config_t &Config);
 
-/**
- * @brief 写gyro寄存器
- *
- * @param handle BMI088句柄指针
- * @param write_reg_address 写gyro寄存器的地址
- * @param tx_data 要写入的数据地址
- * @param tx_length 写入数据长度
- * @param gyro_write_reg_finishedfunction 写完成回调函数（可为NULL）
- */
-void bmi088_gyro_write_reg(bmi088_handle_t *handle,uint8_t write_reg_address,uint8_t *tx_data,uint16_t tx_length,bmi088_gyro_write_reg_finishedfunction gyro_write_reg_finishedfunction);
+    /**
+     * @brief 推进BMI088初始化、采样和在线检测
+     *
+     * @param Now_ms 当前系统时间，单位ms
+     */
+    void Update(uint32_t Now_ms);
 
-/**
- * @brief acc软复位
- * 
- * @param handle BMI088句柄指针
- * @param acc_write_reg_finishedfunction 写完成回调函数（可为NULL）
- */
-void bmi088_acc_softreset(bmi088_handle_t *handle,bmi088_acc_write_reg_finishedfunction acc_write_reg_finishedfunction);
+    /**
+     * @brief 处理BMI088数据就绪GPIO中断
+     *
+     * @param GPIO_Pin 触发中断的GPIO引脚
+     */
+    void Process_GPIO_EXTI(uint16_t GPIO_Pin);
 
-/**
- * @brief gyro软复位
- * 
- * @param handle BMI088句柄指针
- * @param acc_write_reg_finishedfunction 写完成回调函数（可为NULL）
- */
-void bmi088_gyro_softreset(bmi088_handle_t *handle,bmi088_gyro_write_reg_finishedfunction gyro_write_reg_finishedfunction);
+    /**
+     * @brief 获取是否产生了一组新的ACC与GYRO完整数据
+     *
+     * @return bool true表示上层还没有处理本次完整数据
+     */
+    bool Get_New_Sample_Flag();
 
-/**
- * @brief BMI088 TxRx回调函数
- * 
- * @param Tx_Buffer 发送缓冲区
- * @param Rx_Buffer 接收缓冲区
- * @param Tx_Length 发送长度
- * @param Rx_Length 接受长度
- */
-void bmi088_spi_txrxcallback(uint8_t *Tx_Buffer, uint8_t *Rx_Buffer, uint16_t Tx_Length, uint16_t Rx_Length);
+    /**
+     * @brief 清除完整数据更新标志
+     */
+    void Clear_New_Sample_Flag();
 
-#ifdef __cplusplus
-}
-#endif
+    /**
+     * @brief 获取BMI088驱动当前运行状态
+     *
+     * @return BMI088_States_e 当前运行状态
+     */
+    inline BMI088_States_e Get_States() { return States; }
+
+    /**
+     * @brief 获取BMI088初始化是否已经完成
+     *
+     * @return bool true表示芯片ID和全部配置寄存器已经处理完成
+     */
+    inline bool Get_Init_Finished() { return Init_Finished; }
+
+    /**
+     * @brief 获取BMI088当前在线状态
+     *
+     * @return bool true表示完整数据没有超过反馈超时时间
+     */
+    inline bool Get_Online_State() { return Online; }
+
+    /**
+     * @brief 获取最近一组完整数据的接收时间
+     *
+     * @return uint32_t 最近接收时间，单位ms
+     */
+    inline uint32_t Get_Last_Sample_Time() { return Last_Sample_Time; }
+
+    /**
+     * @brief 获取加速度计X轴原始值
+     *
+     * @return int16_t X轴寄存器原始值
+     */
+    inline int16_t Get_ACC_Raw_X() { return ACC_Raw_X; }
+
+    /**
+     * @brief 获取加速度计Y轴原始值
+     *
+     * @return int16_t Y轴寄存器原始值
+     */
+    inline int16_t Get_ACC_Raw_Y() { return ACC_Raw_Y; }
+
+    /**
+     * @brief 获取加速度计Z轴原始值
+     *
+     * @return int16_t Z轴寄存器原始值
+     */
+    inline int16_t Get_ACC_Raw_Z() { return ACC_Raw_Z; }
+
+    /**
+     * @brief 获取陀螺仪X轴原始值
+     *
+     * @return int16_t X轴寄存器原始值
+     */
+    inline int16_t Get_GYRO_Raw_X() { return GYRO_Raw_X; }
+
+    /**
+     * @brief 获取陀螺仪Y轴原始值
+     *
+     * @return int16_t Y轴寄存器原始值
+     */
+    inline int16_t Get_GYRO_Raw_Y() { return GYRO_Raw_Y; }
+
+    /**
+     * @brief 获取陀螺仪Z轴原始值
+     *
+     * @return int16_t Z轴寄存器原始值
+     */
+    inline int16_t Get_GYRO_Raw_Z() { return GYRO_Raw_Z; }
+
+    /**
+     * @brief 获取加速度计X轴换算值
+     *
+     * @return float X轴加速度，单位g
+     */
+    inline float Get_ACC_X_G() { return ACC_X_G; }
+
+    /**
+     * @brief 获取加速度计Y轴换算值
+     *
+     * @return float Y轴加速度，单位g
+     */
+    inline float Get_ACC_Y_G() { return ACC_Y_G; }
+
+    /**
+     * @brief 获取加速度计Z轴换算值
+     *
+     * @return float Z轴加速度，单位g
+     */
+    inline float Get_ACC_Z_G() { return ACC_Z_G; }
+
+    /**
+     * @brief 获取陀螺仪X轴换算值
+     *
+     * @return float X轴角速度，单位degree/s
+     */
+    inline float Get_GYRO_X_DPS() { return GYRO_X_DPS; }
+
+    /**
+     * @brief 获取陀螺仪Y轴换算值
+     *
+     * @return float Y轴角速度，单位degree/s
+     */
+    inline float Get_GYRO_Y_DPS() { return GYRO_Y_DPS; }
+
+    /**
+     * @brief 获取陀螺仪Z轴换算值
+     *
+     * @return float Z轴角速度，单位degree/s
+     */
+    inline float Get_GYRO_Z_DPS() { return GYRO_Z_DPS; }
+
+private:
+    /**
+     * @brief BMI088非阻塞初始化步骤
+     */
+    enum class Init_State_e : uint8_t
+    {
+        Start_ACC_Reset = 0,
+        Wait_ACC_Reset,
+        Wait_ACC_Reset_Delay,
+        Start_GYRO_Reset,
+        Wait_GYRO_Reset,
+        Wait_GYRO_Reset_Delay,
+        Start_ACC_Dummy_Read,
+        Wait_ACC_Dummy_Read,
+        Start_ACC_ID_Read,
+        Wait_ACC_ID_Read,
+        Start_GYRO_ID_Read,
+        Wait_GYRO_ID_Read,
+        Check_Chip_ID,
+        Start_Config_Register,
+        Wait_Config_Register,
+        Wait_Config_Delay,
+        Finished,
+        Error
+    };
+
+    /**
+     * @brief 当前SPI DMA传输内容
+     */
+    enum class Transfer_Type_e : uint8_t
+    {
+        None = 0,
+        Write_Register,
+        Read_ACC_ID,
+        Read_GYRO_ID,
+        Read_ACC_Data,
+        Read_GYRO_Data
+    };
+
+    BMI088_Config_t Config;                                      //初始化时保存的硬件和采样配置
+    BMI088_States_e States = BMI088_States_e::Uninitialized;     //驱动对上层公开的运行状态
+    Init_State_e Init_State = Init_State_e::Start_ACC_Reset;     //当前非阻塞初始化步骤
+    volatile Transfer_Type_e Transfer_Type = Transfer_Type_e::None; //当前DMA传输内容
+
+    bool Init_Finished = false;                                  //全部配置寄存器是否已经写完
+    bool Online = false;                                         //完整数据是否在超时时间内更新
+    bool New_Sample = false;                                     //上层是否还有新数据未处理
+    bool ACC_Sample_Valid = false;                               //是否已经读取了本组ACC数据
+
+    volatile bool Transfer_Finished = false;                     //SPI完成回调写入，Task读取
+    volatile bool Transfer_Error = false;                        //SPI错误回调写入，Task读取
+    volatile bool ACC_Data_Ready = false;                        //ACC外部中断留下的采样请求
+    volatile bool GYRO_Data_Ready = false;                       //GYRO外部中断留下的采样请求
+    volatile bool Raw_Sample_Ready = false;                      //六轴原始值已经组合完成
+
+    uint8_t Tx_Buffer[16] = {0};                                 //寄存器读写发送缓冲区
+    uint8_t Rx_Buffer[16] = {0};                                 //寄存器读取接收缓冲区
+
+    uint8_t ACC_Chip_ID = 0;
+    uint8_t GYRO_Chip_ID = 0;
+    uint8_t Config_Register_Index = 0;
+    uint32_t Config_Register_Delay_ms = 0;
+
+    uint32_t State_Start_Time = 0;                               //当前等待步骤开始时间
+    uint32_t Init_Finished_Time = 0;                             //驱动初始化完成时间
+    uint32_t Last_Sample_Time = 0;                               //最近完整六轴数据时间
+
+    int16_t ACC_Raw_X = 0;
+    int16_t ACC_Raw_Y = 0;
+    int16_t ACC_Raw_Z = 0;
+    int16_t GYRO_Raw_X = 0;
+    int16_t GYRO_Raw_Y = 0;
+    int16_t GYRO_Raw_Z = 0;
+
+    float ACC_X_G = 0.0f;
+    float ACC_Y_G = 0.0f;
+    float ACC_Z_G = 0.0f;
+    float GYRO_X_DPS = 0.0f;
+    float GYRO_Y_DPS = 0.0f;
+    float GYRO_Z_DPS = 0.0f;
+
+    static Class_BMI088 *BMI088_Instance;
+
+    /**
+     * @brief 将SPI BSP完成回调转发到当前BMI088对象
+     *
+     * @param Tx_Buffer 本次通信使用的发送缓冲区
+     * @param Rx_Buffer 本次通信使用的接收缓冲区
+     * @param Tx_Length 协议发送段长度
+     * @param Rx_Length 协议接收段长度
+     */
+    static void SPI_Complete_Callback(uint8_t *Tx_Buffer,uint8_t *Rx_Buffer,uint16_t Tx_Length,uint16_t Rx_Length);
+
+    /**
+     * @brief 将SPI BSP错误回调转发到当前BMI088对象
+     */
+    static void SPI_Error_Callback();
+
+    /**
+     * @brief 按当前初始化步骤推进软复位、ID检查和寄存器配置
+     *
+     * @param Now_ms 当前系统时间，单位ms
+     */
+    void Init_Process(uint32_t Now_ms);
+
+    /**
+     * @brief 处理数据就绪请求、单位换算和在线检测
+     *
+     * @param Now_ms 当前系统时间，单位ms
+     */
+    void Data_Process(uint32_t Now_ms);
+
+    /**
+     * @brief 处理一次SPI DMA完成后的寄存器数据
+     *
+     * @param Tx_Buffer 本次通信使用的发送缓冲区
+     * @param Rx_Buffer 本次通信使用的接收缓冲区
+     * @param Tx_Length 协议发送段长度
+     * @param Rx_Length 协议接收段长度
+     */
+    void Process_SPI_Complete(uint8_t *Tx_Buffer,uint8_t *Rx_Buffer,uint16_t Tx_Length,uint16_t Rx_Length);
+
+    /**
+     * @brief 记录SPI DMA错误，交给Update统一进入错误状态
+     */
+    void Process_SPI_Error();
+
+    /**
+     * @brief 启动一次加速度计寄存器DMA读取
+     *
+     * @param Register 起始寄存器地址
+     * @param Length 需要读取的真实数据长度
+     * @param New_Transfer_Type 本次传输用途
+     * @return bool true表示DMA成功启动
+     */
+    bool Start_ACC_Read(uint8_t Register,uint8_t Length,Transfer_Type_e New_Transfer_Type);
+
+    /**
+     * @brief 启动一次陀螺仪寄存器DMA读取
+     *
+     * @param Register 起始寄存器地址
+     * @param Length 需要读取的真实数据长度
+     * @param New_Transfer_Type 本次传输用途
+     * @return bool true表示DMA成功启动
+     */
+    bool Start_GYRO_Read(uint8_t Register,uint8_t Length,Transfer_Type_e New_Transfer_Type);
+
+    /**
+     * @brief 启动一次加速度计单寄存器DMA写入
+     *
+     * @param Register 目标寄存器地址
+     * @param Data 需要写入的一个字节
+     * @return bool true表示DMA成功启动
+     */
+    bool Start_ACC_Write(uint8_t Register,uint8_t Data);
+
+    /**
+     * @brief 启动一次陀螺仪单寄存器DMA写入
+     *
+     * @param Register 目标寄存器地址
+     * @param Data 需要写入的一个字节
+     * @return bool true表示DMA成功启动
+     */
+    bool Start_GYRO_Write(uint8_t Register,uint8_t Data);
+
+    /**
+     * @brief 按配置索引启动下一项BMI088寄存器写入
+     *
+     * @return bool true表示对应寄存器写入已经启动
+     */
+    bool Start_Config_Register();
+
+    /**
+     * @brief 读取并清除一次SPI传输完成标志
+     *
+     * @return bool true表示刚刚完成了一次SPI传输
+     */
+    bool Take_Transfer_Finished();
+
+    /**
+     * @brief 根据配置量程把六轴原始值换算为g和degree/s
+     */
+    void Update_Scaled_Data();
+
+    /**
+     * @brief 停止驱动流程并进入不可继续运行的错误状态
+     */
+    void Set_Error_State();
+};
 
 #endif /* __BMI088_H__ */
