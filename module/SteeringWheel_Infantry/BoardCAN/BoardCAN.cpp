@@ -92,10 +92,10 @@ Enum_CAN_Transmit_Status_e Class_SteeringWheel_Infantry_BoardCAN::Send_Remote_Jo
  * @param Dial_Wheel 拨轮数据
  * @param Left_ThreeKey 左侧三档开关状态
  * @param Right_ThreeKey 右侧三档开关状态
- * @param source_online DR16数据源是否在线
+ * @param DR16_Online DR16数据源是否在线
  * @return Enum_CAN_Transmit_Status_e CAN发送状态
  */
-Enum_CAN_Transmit_Status_e Class_SteeringWheel_Infantry_BoardCAN::Send_Remote_ThreeKey_And_Dial_Wheel_Data(int16_t Dial_Wheel,BoardCAN_Remote_ThreeKey_e Left_ThreeKey,BoardCAN_Remote_ThreeKey_e Right_ThreeKey,bool source_online)
+Enum_CAN_Transmit_Status_e Class_SteeringWheel_Infantry_BoardCAN::Send_Remote_ThreeKey_And_Dial_Wheel_Data(int16_t Dial_Wheel,BoardCAN_Remote_ThreeKey_e Left_ThreeKey,BoardCAN_Remote_ThreeKey_e Right_ThreeKey,bool DR16_Online)
 {
     if (CAN_Interface == nullptr)
     {
@@ -108,7 +108,7 @@ Enum_CAN_Transmit_Status_e Class_SteeringWheel_Infantry_BoardCAN::Send_Remote_Th
 
     // Data[2]低2位为左开关，高2位为右开关
     Data[2] = static_cast<uint8_t>((static_cast<uint8_t>(Left_ThreeKey) & 0x03) | ((static_cast<uint8_t>(Right_ThreeKey) & 0x03) << 2));
-    Data[3] = source_online ? 1 : 0;
+    Data[3] = DR16_Online ? 1 : 0;
     Data[4] = Tx_Sequence++;
     
     //Data[5]~Data[7] 预留
@@ -151,9 +151,9 @@ bool Class_SteeringWheel_Infantry_BoardCAN::Process_CAN_Message(uint16_t CAN_ID,
         case BoardCAN_Remote_ThreeKey_And_Dial_Wheel_Data_ID:
         {
             Remote_Data.Dial_Wheel = BoardCAN_Unpack_i16(Data,0);
-            Remote_Data.Left_ThreeKey = static_cast<BoardCAN_Remote_ThreeKey_e>(Data[2] & 0x03U);
-            Remote_Data.Right_ThreeKey = static_cast<BoardCAN_Remote_ThreeKey_e>((Data[2] >> 2) & 0x03U);
-            Remote_Data.DR16_Online = (Data[3] & 0x01U) != 0U;
+            Remote_Data.Left_ThreeKey = static_cast<BoardCAN_Remote_ThreeKey_e>(Data[2] & 0x03);
+            Remote_Data.Right_ThreeKey = static_cast<BoardCAN_Remote_ThreeKey_e>((Data[2] >> 2) & 0x03);
+            Remote_Data.DR16_Online = (Data[3] & 0x01) != 0;// Data[3]最低位为DR16在线状态 !0来判断是true还是false
             Remote_Data.Rx_Sequence = Data[4];
 
             Remote_Data.ThreeKey_And_Dial_Wheel_Data_Received = true;
